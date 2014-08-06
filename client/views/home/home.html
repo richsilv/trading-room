@@ -1,0 +1,27 @@
+<template name="Home">
+	<h1>{{foo}}</h1>
+  	<h1>Candles</h1>
+  	{{> candleData}}
+</template>
+
+<template name="candleData">
+
+  	<svg xmlns="http://www.w3.org/2000/svg"
+       	 width={{graphWidth}} height="400">
+
+       	 {{#each candleObjects}}
+       	 	<rect x={{bx}} y={{bh}} width={{w}} height={{bl}} fill={{colour}} />
+       	 	<line x1={{x}} y1={{lh}} x2={{x}} y2={{ll}} stroke="black" />
+       	 {{/each}}
+
+    </svg>
+
+	<table>
+		<thead><tr><th>Timestamp</th><th>High</th><th>Low</th><th>Open</th><th>Close</th></tr></thead>
+		<tbody>
+		{{#each candles}}
+			<tr><th>{{timeStamp}}</th><td>{{high}}</td><td>{{low}}</td><td>{{open}}</td><td>{{close}}</td></tr>
+		{{/each}}
+		</tbody>
+	</table>
+</template>
