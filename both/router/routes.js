@@ -16,10 +16,9 @@ Router.map(function () {
   */
   this.route('home', {
     path: '/',
-    data: {foor: "bar"},
-    template: 'Home',
-    waitOn: function() {
-      Meteor.subscribe('pricedata', {}, this.params.interval ? parseInt(this.params.interval, 10) : 10000);
+    onBeforeAction: function() {
+      Session.set('maxCandles', parseInt(this.params.limit, 10) || 500);
+      Session.set('interval', parseInt(this.params.interval, 10) || 10000);
     }
   });
 });

@@ -12,3 +12,6 @@ _.each(App.helpers, function (helper, key) {
 });
 
 Session.set('graphWidth', 800);
+Session.set('graphHeight', 400);
+Session.set('axisPadding', 35);
+Session.set('ticker', 'EURUSD');

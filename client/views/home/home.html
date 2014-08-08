@@ -1,27 +1,144 @@
 <template name="Home">
-	<h1>{{foo}}</h1>
-  	<h1>Candles</h1>
+
+  {{> connections}}
+
+  {{> streams}}
+
+  {{> priceData}}
+
+  	<h1>{{ticker}}</h1>
   	{{> candleData}}
+
+</template>
+
+<template name="connections">
+
+  <div class="small-6 large-3 columns">
+    
+    <h1>Connections</h1>
+    
+    <form id="connectionForm">
+      <div class="row collapse">
+        <div class="small-9 columns">
+          <input type="text" placeholder="URL" id="connectURL">
+        </div>
+        <div class="small-3 columns">
+          <a href="#" class="button postfix" id="connectButton">Connect</a>
+          <input type="submit" style="visibility: hidden;">
+        </div>
+      </div>
+    </form>
+
+    {{#if error connection}}
+      <div class="rounded callout panel">
+        {{error connection}}
+      </div>
+    {{/if}}
+
+    {{#if liveConnections}}
+      <select id="connection">
+      {{#each liveConnections}}
+        <option value={{_id}}>{{url}}</option>
+      {{/each}}
+      </select>
+    {{/if}}
+
+  </div>
+
+</template>
+
+<template name="streams">
+
+  <div class="small-6 large-3 columns">
+    
+    <h1>Streams</h1>
+
+    {{#each liveStreams}}
+      <div class="stream panel" value={{_id}}><strong>{{ticker}}</strong>,<em>{{delay}}s</em> average delay, <em>{{stdDev}}%</em> vol.</div>
+    {{/each}}
+
+    {{#if error stream}}
+      <div class="rounded callout panel">
+        {{error stream}}
+      </div>
+    {{/if}}
+
+  </div>
+
+</template>
+
+<template name="priceData">
+
+  <div class="small-12 large-6 columns">
+    
+    <h1>Price Data</h1>
+
+    <form id="priceDataForm">
+      <div class="row">
+        <div class="small-6 columns">
+          <label>Ticker</label>
+          <input type="text" value={{stream.ticker}} readonly="true"  id="priceDataTicker">
+        </div>
+        <div class="small-6 columns">
+          <label>Interval</label>
+          <input type="number" value="10000" step="1000" id="priceDataInterval">
+        </div>
+        <div class="small-6 columns">
+          <label>Max. Candles</label>
+          <input type="number" value="25" id="priceDataMaxCandles">
+        </div>
+        <div class="small-6 columns">
+          <label>&nbsp;</label>
+          <a href="#" class="button {{#unless streamTicker}}disabled{{/unless}}" id="priceDataButton">Chart Series</a>
+          <input type="submit" style="visibility: hidden;">
+        </div>
+      </div>
+    </form>
+
+    {{#each priceSeries}}
+      <div class="priceSeries panel {{#if up}}green{{/if}} {{#if down}}red{{/if}}"><strong>{{ticker}}</strong>, <span style="font-size: 1.5rem;">{{price}}</span> at {{timeStamp}} ; <em>LATENCY = {{latency}}ms</em></div>
+    {{/each}}
+
+    {{#if error priceData}}
+      <div class="rounded callout panel">
+        {{error priceData}}
+      </div>
+    {{/if}}
+
+  </div>
+
 </template>
 
 <template name="candleData">
 
   	<svg xmlns="http://www.w3.org/2000/svg"
-       	 width={{graphWidth}} height="400">
+       	 width={{graphWidth}} height={{graphHeight}}>
 
-       	 {{#each candleObjects}}
+       	<line x1={{axisGap}} y1="0" x2={{axisGap}} y2={{addAttr graphHeight axisNegGap}} stroke="darkgrey" />
+		<line x1={{axisGap}} y1={{addAttr graphHeight axisNegGap}} x2={{graphWidth}} y2={{addAttr graphHeight axisNegGap}} stroke="darkgrey" />	 
+
+       	 {{#each candleObjects.candles}}
        	 	<rect x={{bx}} y={{bh}} width={{w}} height={{bl}} fill={{colour}} />
        	 	<line x1={{x}} y1={{lh}} x2={{x}} y2={{ll}} stroke="black" />
        	 {{/each}}
 
+       	 {{#each candleObjects.checkMarks.y}}
+       	 	<line x1={{addAttr axisGap -5}} y1={{pos}} x2={{axisGap}} y2={{pos}} stroke="darkgrey" />
+       	 	<text x=1 y={{addAttr pos 5}} font-family="Verdana" font-size="10">{{val}}</text>
+       	 {{/each}}
+
     </svg>
 
-	<table>
+    <div class="big bold price data">
+    	<span>{{ticker}}</span><span>{{price}}</span><span>{{direction}}</span><span>{{timeStamp}}</span><span>Latency: {{latency}}ms</span>
+    </div>
+
+<!-- 	<table>
 		<thead><tr><th>Timestamp</th><th>High</th><th>Low</th><th>Open</th><th>Close</th></tr></thead>
 		<tbody>
 		{{#each candles}}
 			<tr><th>{{timeStamp}}</th><td>{{high}}</td><td>{{low}}</td><td>{{open}}</td><td>{{close}}</td></tr>
 		{{/each}}
 		</tbody>
-	</table>
+	</table> -->
 </template>
