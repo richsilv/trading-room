@@ -10,6 +10,12 @@ Handlebars.registerHelper('error', function(key) {
 
 });
 
+Handlebars.registerHelper('or', function(x, y) {
+
+  return x || y;
+
+});
+
 Handlebars.registerHelper('up', function(key) {
 
   return this.direction > 0;
@@ -22,18 +28,7 @@ Handlebars.registerHelper('down', function(key) {
 
 });
 
-Template.Home.events({
-  /*
-   * Example: 
-   *  'click .selector': function (e, tmpl) {
-   *
-   *  }
-   */
-});
 
-Template.Home.helpers({
-
-});
 
 Template.connections.helpers({
 
@@ -117,7 +112,7 @@ Template.priceData.helpers({
 
   priceSeries: function() {
 
-    return _.map(TradingRoom.priceData.keys(), function(data) { return _.extend({latency: data.latency}, data.LastTrade.findOne()); });
+    return _.map(TradingRoom.priceData.keys(), function(data) { return _.extend({latency: data.latency, priceDataId: data.candlesId}, data.LastTrade.findOne()); });
 
   }
 
@@ -129,59 +124,60 @@ Template.priceData.events({
 
     var connectionId = selections.get('connection'),
         streamId = selections.get('stream'),
-        connection = TradingRoom.connections.get(connectionId),
         interval = parseInt($('#priceDataInterval').val(), 10),
         maxCandles = parseInt($('#priceDataMaxCandles').val(), 10);
 
-    if (connection && streamId && interval && maxCandles) {
-      var stream = connection.TickEmitterData.findOne({_id: streamId});
-      if (stream) {
-        var candlesColl = Random.id(),
-            lastTradeColl = Random.id(),
-            thisLastTradeCollection = new Meteor.Collection(lastTradeColl, connection.remote);
-        TradingRoom.priceData.set(streamId, {
-            connectionId: connectionId,
-            streamId: streamId,
-            Candles: new Meteor.Collection(candlesColl, connection.remote),
-            LastTrade: thisLastTradeCollection,
-            subscription: connection.remote.subscribe('pricedata', candlesColl, lastTradeColl, stream.ticker, interval, { time: {$gte: new Date(new Date().getTime() - (interval * maxCandles * 1.2))} }),
-            latency: 0
-        });
-        thisLastTradeCollection.find().observeChanges({
-          changed: function(id, fields) {
-            if (fields.timeStamp) {
-              TradingRoom.priceData.values[streamId].latency = new Date().getTime() - fields.timeStamp;
-              TradingRoom.priceData.dep.changed();
-            }
-          }
-        });
-      }
-    }
+    new TradingRoom.PriceDataSub(connectionId, streamId, interval, maxCandles);
+
+    return false;
+
+  },
+
+  'click .priceSeries.panel': function(event) {
+
+    TradingRoom.priceData.values[this.priceDataId].liveChart = true;
+    TradingRoom.priceData.dep.changed();
+
+  },
+
+  'click .cancelButton': function(event) {
+
+    TradingRoom.priceData.get(this.priceDataId).stop();
     return false;
 
   }
 
-})
+});
 
-Template.candleData.helpers({
+Template.charts.helpers({
+
+  charts: function() {
+    return TradingRoom.priceData.getFilter({liveChart: true});
+  }
+
+});
+
+Template.chart.helpers({
 
   candleObjects: function() {
 
-/*    var GAP = 4;
-
-    var maxCandles = Session.get('maxCandles');
-    var queryOptions = maxCandles ? {limit: maxCandles} : {};
-        candSet = Candles.find( {}, _.extend( queryOptions, {sort: {timeStamp: -1}}) ).fetch(),
+    var GAP = App.candleGap,
+        chartCanvas = UI._templateInstance().find('.chartCanvas'),
+        maxCandles = 0,
+        queryOptions = maxCandles ? {limit: maxCandles} : {};
+        candSet = this.Candles.find( {}, _.extend( queryOptions, {sort: {timeStamp: -1}}) ).fetch(),
         candLength = candSet.length,
-        axisPadding = Session.get('axisPadding') || 0;
+        axisPadding = App.axisPadding || 0,
+        graphWidth = chartCanvas ? $(chartCanvas).width() : 300,
+        graphHeight = App.graphHeight;
 
     if (!candLength) return [];
 
-    var spacing = (Session.get('graphWidth') - axisPadding * 2) / (maxCandles || candLength),
+    var spacing = (graphWidth - axisPadding * 2) / (maxCandles || candLength),
         width = spacing - GAP,
         high = _.max(candSet, function(c) {return c.high;}).high,
         low = _.min(candSet, function(c) {return c.low;}).low,
-        ratio = (Session.get('graphHeight') - axisPadding * 2) / (high - low),
+        ratio = (graphHeight - axisPadding * 2) / (high - low),
         checkMarks = makeCheckMarks(low, high);
 
     return {
@@ -190,7 +186,7 @@ Template.candleData.helpers({
         var i = candLength - j - 1,
             blow = Math.min(c.open, c.close),
             bhigh = Math.max(c.open, c.close),
-            colour = (c.open > c.close) ? "grey" : "lightblue",
+            colour = (c.open > c.close) ? App.downColour : App.upColour,
             x = axisPadding + (i * spacing) + ((spacing - 1) / 2),
             bx = axisPadding + (i * spacing) + (GAP / 2),
             lh = axisPadding + (high - c.high) * ratio,
@@ -214,19 +210,11 @@ Template.candleData.helpers({
         y: checkMarks.map(function(x) { return { val: x, pos: 25 + (high - x) * ratio }; })
       }
 
-    }*/
-  },
-
-  candles: function() {
-    // return Candles.find({}).fetch();
-  },
-
-  graphWidth: function() {
-    return Session.get('graphWidth');
+    }
   },
 
   graphHeight: function() {
-    return Session.get('graphHeight');
+    return App.graphHeight;
   },
 
   axisGap: function() {
@@ -242,6 +230,17 @@ Template.candleData.helpers({
   }
 
 });
+
+Template.chart.events({
+
+  'click .cancelButton': function() {
+
+      TradingRoom.priceData.values[this.candlesId].liveChart = false;
+      TradingRoom.priceData.dep.changed();
+
+  }
+
+})
 
 /*****************************************************************************/
 /* Home: Lifecycle Hooks */

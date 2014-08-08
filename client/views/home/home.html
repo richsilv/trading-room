@@ -6,8 +6,7 @@
 
   {{> priceData}}
 
-  	<h1>{{ticker}}</h1>
-  	{{> candleData}}
+  {{> charts}}
 
 </template>
 
@@ -49,6 +48,8 @@
 
 <template name="streams">
 
+{{#if liveStreams}}
+
   <div class="small-6 large-3 columns">
     
     <h1>Streams</h1>
@@ -65,9 +66,13 @@
 
   </div>
 
+{{/if}}
+
 </template>
 
 <template name="priceData">
+
+{{#if or stream priceSeries}}
 
   <div class="small-12 large-6 columns">
     
@@ -96,7 +101,7 @@
     </form>
 
     {{#each priceSeries}}
-      <div class="priceSeries panel {{#if up}}green{{/if}} {{#if down}}red{{/if}}"><strong>{{ticker}}</strong>, <span style="font-size: 1.5rem;">{{price}}</span> at {{timeStamp}} ; <em>LATENCY = {{latency}}ms</em></div>
+      <div class="priceSeries panel {{#if up}}green{{/if}} {{#if down}}red{{/if}}"><strong>{{ticker}}</strong>, <span style="font-size: 1.5rem;">{{price}}</span> at {{timeStamp}} ; <em>LATENCY = {{latency}}ms</em><span class="right bold cancelButton">X</span></div>
     {{/each}}
 
     {{#if error priceData}}
@@ -107,38 +112,39 @@
 
   </div>
 
+{{/if}}
+
 </template>
 
-<template name="candleData">
+<template name="charts">
 
-  	<svg xmlns="http://www.w3.org/2000/svg"
-       	 width={{graphWidth}} height={{graphHeight}}>
+    {{#each charts}}
+      <div class="small-12 large-6 columns">
+        {{> chart}}
+      </div>
+    {{/each}}
 
-       	<line x1={{axisGap}} y1="0" x2={{axisGap}} y2={{addAttr graphHeight axisNegGap}} stroke="darkgrey" />
-		<line x1={{axisGap}} y1={{addAttr graphHeight axisNegGap}} x2={{graphWidth}} y2={{addAttr graphHeight axisNegGap}} stroke="darkgrey" />	 
+</template>
 
-       	 {{#each candleObjects.candles}}
-       	 	<rect x={{bx}} y={{bh}} width={{w}} height={{bl}} fill={{colour}} />
-       	 	<line x1={{x}} y1={{lh}} x2={{x}} y2={{ll}} stroke="black" />
-       	 {{/each}}
+<template name="chart">
 
-       	 {{#each candleObjects.checkMarks.y}}
-       	 	<line x1={{addAttr axisGap -5}} y1={{pos}} x2={{axisGap}} y2={{pos}} stroke="darkgrey" />
-       	 	<text x=1 y={{addAttr pos 5}} font-family="Verdana" font-size="10">{{val}}</text>
-       	 {{/each}}
+  <span class="right bold cancelButton">X</span>
 
-    </svg>
+	<svg xmlns="http://www.w3.org/2000/svg" style="width: 100%; height: {{graphHeight}}" class="chartCanvas">
 
-    <div class="big bold price data">
-    	<span>{{ticker}}</span><span>{{price}}</span><span>{{direction}}</span><span>{{timeStamp}}</span><span>Latency: {{latency}}ms</span>
-    </div>
+   	<line x1={{axisGap}} y1="0" x2={{axisGap}} y2={{addAttr graphHeight axisNegGap}} stroke="darkgrey" />
+	<line x1={{axisGap}} y1={{addAttr graphHeight axisNegGap}} x2={{graphWidth}} y2={{addAttr graphHeight axisNegGap}} stroke="darkgrey" />	 
 
-<!-- 	<table>
-		<thead><tr><th>Timestamp</th><th>High</th><th>Low</th><th>Open</th><th>Close</th></tr></thead>
-		<tbody>
-		{{#each candles}}
-			<tr><th>{{timeStamp}}</th><td>{{high}}</td><td>{{low}}</td><td>{{open}}</td><td>{{close}}</td></tr>
-		{{/each}}
-		</tbody>
-	</table> -->
+   	 {{#each candleObjects.candles}}
+     	 	<rect x={{bx}} y={{bh}} width={{w}} height={{bl}} fill={{colour}} />
+     	 	<line x1={{x}} y1={{lh}} x2={{x}} y2={{ll}} stroke="black" />
+   	 {{/each}}
+
+   	 {{#each candleObjects.checkMarks.y}}
+     	 	<line x1={{addAttr axisGap -5}} y1={{pos}} x2={{axisGap}} y2={{pos}} stroke="darkgrey" />
+     	 	<text x=1 y={{addAttr pos 5}} font-family="Verdana" font-size="10">{{val}}</text>
+   	 {{/each}}
+
+  </svg>
+
 </template>

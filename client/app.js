@@ -2,6 +2,11 @@
 /* Client App Namespace  */
 /*****************************************************************************/
 _.extend(App, {
+	graphHeight: 400,
+	axisPadding: 35,
+	candleGap: 4,
+	upColour: "lightblue", 
+	downColour: "grey"
 });
 
 App.helpers = {

@@ -20,7 +20,12 @@ ReactiveObj = function(def) {
 	this.getIndex = function(index) {
 		var key = Object.keys(_this.values)[index];
 		return _this.get(key);
-	}
+	};
+
+	this.getFilter = function(filter) {
+		_this.dep.depend();
+		return _.where(_.values(_this.values), filter);
+	};
 
 	this.set = function(key, value) {
 		_this.values[key] = value;
@@ -69,25 +74,49 @@ TradingRoom.RemoteConnection = function(url) {
 
 }
 
-TradingRoom.StreamSubscription = function(connection, ticker, options) {
+TradingRoom.PriceDataSub = function(connectionId, streamId, interval, maxCandles) {
 
-	options = options || {};
+	interval = interval || 10000;
+	maxCandles = maxCandles || 50;
 
-	if (!remote) throw new Meteor.Error(400, "No remote defined");
-	if (!ticker) throw new Meteor.Error(400, "No ticker supplied");
+	var connection = TradingRoom.connections.get(connectionId);
+	if (!connection) throw new Meteor.Error(400, "Bad connection id");
+
+	var stream = connection.TickEmitterData.findOne({_id: streamId});
+	if (!stream) throw new Meteor.Error(400, "Bad stream id");
 
 	var _this = this,
-		interval = options.interval || 10000,
-		limit = options.limit || 500,
-		filter = { time: { $gte: new Date(new Date().getTime() - limit * interval * 2) } }; 
+		filter = { time: { $gte: new Date(new Date().getTime() - maxCandles * interval * 1.2) } },
+		candlesColl = Random.id(),
+        lastTradeColl = Random.id(),
+		thisLastTradeCollection = new Meteor.Collection(lastTradeColl, connection.remote),
+		thisCandlesCollection = new Meteor.Collection(candlesColl, connection.remote);
+    
+    _.extend(this, {
+        connectionId: connectionId,
+        streamId: streamId,
+        candlesId: candlesColl,
+        Candles: thisCandlesCollection,
+        LastTrade: thisLastTradeCollection,
+        subHandle: connection.remote.subscribe('pricedata', candlesColl, lastTradeColl, stream.ticker, interval, { time: {$gte: new Date(new Date().getTime() - (interval * maxCandles * 1.2))} }),
+        latency: 0
+    });
 
-	this.Candles = new Meteor.Collection('candles', connection.remote);
-	this.LastTrade = new Meteor.Collection('lasttrade', connection.remote);
+    TradingRoom.priceData.set(candlesColl, this);
 
-	this.subHandle = connection.remote.subscribe('pricedata', ticker, filter, interval);
+    thisLastTradeCollection.find().observeChanges({
+      	changed: function(id, fields) {
+        	if (fields.timeStamp) {
+          		_this.latency = new Date().getTime() - fields.timeStamp;
+          		// _.each(TradingRoom.priceData.values, function(val, key) { if (val.streamId === streamId) TradingRoom.priceData.values[key].latency = new Date().getTime() - fields.timeStamp;}); 
+          		TradingRoom.priceData.dep.changed();
+        	}
+      	}
+    });
 
 	this.stop = function() {
 		_this.subHandle.stop();
+		TradingRoom.priceData.unset(candlesColl);
 	}
 
 }
