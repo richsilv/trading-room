@@ -54,6 +54,29 @@ TradingRoom = {
 	priceData: new ReactiveObj()
 };
 
+TradingRoom.connectURL = function(url) {
+
+	var error
+
+    if (!url) {
+      connectionError.set('Invalid URL');
+      return false;
+    }
+
+    try {
+      new TradingRoom.RemoteConnection( url );
+    }
+
+    catch (e) {
+      error = e;
+    }
+
+    finally {
+     return error;
+    }
+
+}
+
 TradingRoom.RemoteConnection = function(url) {
 
 	var _this = this;
@@ -97,9 +120,15 @@ TradingRoom.PriceDataSub = function(connectionId, streamId, interval, maxCandles
         streamId: streamId,
         candlesId: candlesColl,
         Candles: thisCandlesCollection,
+        maxCandles: maxCandles,
+        interval: interval,
         LastTrade: thisLastTradeCollection,
         subHandle: connection.remote.subscribe('pricedata', candlesColl, lastTradeColl, stream.ticker, interval, { time: {$gte: new Date(new Date().getTime() - (interval * maxCandles * 1.2))} }),
-        latency: 0
+        latency: 0,
+        liveCandle: {
+        	_id: null,
+        	dep: new Deps.Dependency()
+        }
     });
 
     TradingRoom.priceData.set(candlesColl, this);

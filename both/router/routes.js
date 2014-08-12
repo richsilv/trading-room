@@ -15,10 +15,9 @@ Router.map(function () {
       this.route('home', {path: '/'});
   */
   this.route('home', {
-    path: '/',
+    path: '/:defaultStream?',
     onBeforeAction: function() {
-      Session.set('maxCandles', parseInt(this.params.limit, 10) || 500);
-      Session.set('interval', parseInt(this.params.interval, 10) || 10000);
+      this.params.defaultStream && TradingRoom.connectURL(this.params.defaultStream);
     }
   });
 });

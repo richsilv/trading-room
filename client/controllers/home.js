@@ -3,9 +3,6 @@ HomeController = RouteController.extend({
   },
 
   data: function () {
-  	return {
-  		graphSub: Session.get('graphSub')
-  	}
   },
 
   action: function () {

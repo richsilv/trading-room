@@ -10,6 +10,31 @@
 	background-color: #2bc62b;
 }
 
+.notReady.panel {
+	background-color: grey;
+}
+
 .bold {
 	font-weight: 800;
+}
+
+.up.candle {
+	stroke: #2f7ed8;
+	fill: #2f7ed8;
+	opacity: 0.8;
+}
+
+.down.candle {
+	stroke: silver;
+	fill: silver;
+	opacity: 0.8;
+}
+
+.live.up.candle, .live.down.candle {
+	opacity: 1.0;
+}
+
+.vertical.guide {
+	stroke: grey;
+	opacity: 0.2;
 }

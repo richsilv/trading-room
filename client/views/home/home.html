@@ -101,7 +101,7 @@
     </form>
 
     {{#each priceSeries}}
-      <div class="priceSeries panel {{#if up}}green{{/if}} {{#if down}}red{{/if}}"><strong>{{ticker}}</strong>, <span style="font-size: 1.5rem;">{{price}}</span> at {{timeStamp}} ; <em>LATENCY = {{latency}}ms</em><span class="right bold cancelButton">X</span></div>
+      <div class="priceSeries panel {{#unless ready}}notReady{{else}} {{#if up}}green{{/if}} {{#if down}}red{{/if}}{{/unless}}">{{#if ready}}<strong>{{ticker}}</strong>, <span style="font-size: 1.5rem;">{{price}}</span> at {{timeStamp}} ; <em>LATENCY = {{latency}}ms</em>{{else}}<span style="font-size: 1.5rem;"><em>Loading...</em></span>{{/if}}<span class="right bold cancelButton">X</span></div>
     {{/each}}
 
     {{#if error priceData}}
@@ -130,21 +130,37 @@
 
   <span class="right bold cancelButton">X</span>
 
-	<svg xmlns="http://www.w3.org/2000/svg" style="width: 100%; height: {{graphHeight}}" class="chartCanvas">
+	<svg xmlns="http://www.w3.org/2000/svg" style="width: 100%; height: {{graphDetails.graphHeight}}" class="chartCanvas">
 
-   	<line x1={{axisGap}} y1="0" x2={{axisGap}} y2={{addAttr graphHeight axisNegGap}} stroke="darkgrey" />
-	<line x1={{axisGap}} y1={{addAttr graphHeight axisNegGap}} x2={{graphWidth}} y2={{addAttr graphHeight axisNegGap}} stroke="darkgrey" />	 
+	  <line x1={{graphDetails.axisGap}} y1={{addAttr graphDetails.graphHeight graphDetails.axisNegGap}} x2={{graphDetails.graphWidth}} y2={{addAttr graphDetails.graphHeight graphDetails.axisNegGap}} stroke="grey" opacity="0.6" />	 
 
-   	 {{#each candleObjects.candles}}
-     	 	<rect x={{bx}} y={{bh}} width={{w}} height={{bl}} fill={{colour}} />
-     	 	<line x1={{x}} y1={{lh}} x2={{x}} y2={{ll}} stroke="black" />
-   	 {{/each}}
+   	  {{#each candleObjects.candles}}
+        {{> candle}}
+   	  {{/each}}
 
-   	 {{#each candleObjects.checkMarks.y}}
-     	 	<line x1={{addAttr axisGap -5}} y1={{pos}} x2={{axisGap}} y2={{pos}} stroke="darkgrey" />
-     	 	<text x=1 y={{addAttr pos 5}} font-family="Verdana" font-size="10">{{val}}</text>
-   	 {{/each}}
+   	  {{#each candleObjects.checkMarks.y}}
+     	 	<line x1=0 y1={{pos}} x2={{graphDetails.graphWidth}} y2={{pos}} stroke="grey" opacity="0.3" />
+     	 	<text x=1 y={{addAttr pos graphDetails.halfTextSize}} font-family={{graphDetails.fontFamily}} font-size={{graphDetails.textSize}} color="#444">{{val}}</text>
+   	  {{/each}}
+
+      {{#each candleObjects.yAxis}}
+        <text x={{addAttr position offset}} y={{addAttr graphDetails.graphHeight -15}} font-family={{graphDetails.fontFamily}} font-size={{graphDetails.textSize}} color="#444">{{label}}</text>
+        <line x1={{position}} x2={{position}} y1={{addAttr graphDetails.graphHeight graphDetails.axisNegGap}} y2={{addAttr graphDetails.graphHeight -30}} stroke="grey" opacity="0.6" />
+      {{/each}}
+
+     <rect x=0 y={{addAttr candleObjects.lastPriceLevel -8}} width={{graphDetails.graphWidth}} height=16 fill="grey" opacity="0.1" />
+     <line x1=0 x2={{graphDetails.graphWidth}} y1={{candleObjects.lastPriceLevel}} y2={{candleObjects.lastPriceLevel}} stroke={{candleObjects.lastTradeColour}} />
+     <text x={{addAttr graphDetails.halfWidth -40}} y={{addAttr candleObjects.lastPriceLevel -10}} font-family={{graphDetails.fontFamily}} font-size={{addAttr graphDetails.textSize 5}} font-weight="bold" color="#222">{{candleObjects.lastPrice}}</text>
 
   </svg>
 
+</template>
+
+<template name="candle">
+  <g>
+    <title><strong>{{time}}</strong><br>High: {{high}}<br>Low: {{low}}<br>Open: {{open}}<br>Close: {{close}}</title>
+    {{#if liveCandleDep}}<line x1={{x}} x2={{x}} y1={{addAttr graphDetails.graphHeight graphDetails.axisNegGap}} y2={{graphDetails.axisGap}} class="vertical guide" />{{/if}}
+    <rect x={{bx}} y={{bh}} width={{w}} height={{bl}} class="{{liveCandleDep}} {{#if colour}}up{{else}}down{{/if}} candle" />
+    <line x1={{x}} y1={{lh}} x2={{x}} y2={{ll}} class="{{liveCandleDep}} {{#if colour}}up{{else}}down{{/if}} candle" />
+  </g>
 </template>
