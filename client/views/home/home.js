@@ -114,7 +114,7 @@ Template.streams.events({
 
   'click .stream': function(event) {
 
-    selections.set('stream', $(event.currentTarget).attr('value'));
+    selections.set('stream', this._id);
     $('.stream').removeClass('callout');
     $(event.target).addClass('callout');
 
@@ -207,7 +207,6 @@ Template.chart.helpers({
         ratio = (graphHeight - axisPadding * 2) / (high - low),
         checkMarks = makeCheckMarks(low, high),
         yAxis = this.yAxis,
-        liveCandleId = this.liveCandle._id,
         yAxisDetails = makeYAxis(candSet[candSet.length - 1].timeStamp.getTime(), candSet[0].timeStamp.getTime(), yAxis, axisPadding, graphWidth);
 
     return {
@@ -221,11 +220,9 @@ Template.chart.helpers({
             lh = axisPadding + (high - c.high) * ratio,
             ll = Math.max(axisPadding + (high - c.low) * ratio, lh + 1),
             bl = Math.max((bhigh - blow) * ratio, 1),
-            bh = axisPadding + (high - bhigh) * ratio,
-            liveCandle = (c._id === liveCandleId);
+            bh = axisPadding + (high - bhigh) * ratio;
 
         return {
-          liveCandle: liveCandle,
           _id: c._id,
           x: x,
           bx: bx,
@@ -271,15 +268,19 @@ Template.chart.events({
 
 });
 
-var changeCount = 0;
+Template.chart.rendered = function() {
+
+  TradingRoom.priceData.dep.changed();
+
+};
 
 Template.candle.helpers({
 
   liveCandleDep: function() {
 
-    UI._parentData(1).liveCandle.dep.depend();
-    console.log("live candle changed", changeCount++);
-    return this.liveCandle ? "live" : null;
+    var liveCandle = UI._parentData(1).liveCandle;
+    liveCandle.dep.depend();
+    return (UI._parentData(1).liveCandle._id === this._id) ? "live" : null;
 
   }
 

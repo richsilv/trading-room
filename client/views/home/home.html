@@ -160,7 +160,7 @@
   <g>
     <title><strong>{{time}}</strong><br>High: {{high}}<br>Low: {{low}}<br>Open: {{open}}<br>Close: {{close}}</title>
     {{#if liveCandleDep}}<line x1={{x}} x2={{x}} y1={{addAttr graphDetails.graphHeight graphDetails.axisNegGap}} y2={{graphDetails.axisGap}} class="vertical guide" />{{/if}}
-    <rect x={{bx}} y={{bh}} width={{w}} height={{bl}} class="{{liveCandleDep}} {{#if colour}}up{{else}}down{{/if}} candle" />
-    <line x1={{x}} y1={{lh}} x2={{x}} y2={{ll}} class="{{liveCandleDep}} {{#if colour}}up{{else}}down{{/if}} candle" />
+    <rect x={{bx}} y={{bh}} width={{w}} height={{bl}} class="{{liveCandleDep}} {{#if colour}}down{{else}}up{{/if}} candle" />
+    <line x1={{x}} y1={{lh}} x2={{x}} y2={{ll}} class="{{liveCandleDep}} {{#if colour}}down{{else}}up{{/if}} candle" />
   </g>
 </template>

@@ -137,8 +137,6 @@ TradingRoom.PriceDataSub = function(connectionId, streamId, interval, maxCandles
       	changed: function(id, fields) {
         	if (fields.timeStamp) {
           		_this.latency = new Date().getTime() - fields.timeStamp;
-          		// _.each(TradingRoom.priceData.values, function(val, key) { if (val.streamId === streamId) TradingRoom.priceData.values[key].latency = new Date().getTime() - fields.timeStamp;}); 
-          		TradingRoom.priceData.dep.changed();
         	}
       	}
     });
