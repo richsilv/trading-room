@@ -95,6 +95,7 @@ Template.connections.events({
 
     var url = $('#connectURL').val();
     errors.set('connection', TradingRoom.connectURL(url));
+    return false;
 
   },
 

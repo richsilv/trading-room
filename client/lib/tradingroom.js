@@ -172,7 +172,7 @@ TradingRoom.priceData.organiseCharts = function() {
 		var chartStyle = {};
 		if (priceData.selected) {
 			chartStyle['margin-left'] = xPosition.toString() + "px";
-			xPosition += App.graphWidth;
+			xPosition += App.graphWidth * Math.cos(hiddenAngle * Math.PI / 180);
 			shownSelected = true;
 			hiddenAngle = -hiddenAngle;
 		}
