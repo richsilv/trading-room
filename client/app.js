@@ -3,9 +3,11 @@
 /*****************************************************************************/
 _.extend(App, {
 	graphHeight: 400,
+	graphWidth: 800,
 	axisPadding: 35,
 	candleGap: 2,
 	textSize: 10,
+	graphBuffer: 20,
 	fontFamily: "Verdana",
 	upColour: "#2f7ed8", 
 	downColour: "silver",
@@ -33,4 +35,13 @@ App.helpers = {
 
 _.each(App.helpers, function (helper, key) {
   Handlebars.registerHelper(key, helper);
+});
+
+Meteor.startup(function() {
+
+	App.fullWidth = window.innerWidth;
+	App.graphWidth = window.innerWidth / 2 - App.graphBuffer;
+	App.graphHeight = Math.min(window.innerHeight, App.graphWidth / 2);
+	App.graphWidth = Math.max(App.graphWidth, 400);
+
 });

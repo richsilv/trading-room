@@ -118,11 +118,11 @@
 
 <template name="charts">
 
+  <div class="columns">
     {{#each charts}}
-      <div class="small-12 large-6 columns">
         {{> chart}}
-      </div>
     {{/each}}
+  </div>
 
 </template>
 
@@ -130,7 +130,7 @@
 
   <span class="right bold cancelButton">X</span>
 
-	<svg xmlns="http://www.w3.org/2000/svg" style="width: 100%; height: {{graphDetails.graphHeight}}" class="chartCanvas">
+	<svg xmlns="http://www.w3.org/2000/svg" class="{{justRendered}} chartCanvas" width={{graphDetails.graphWidth}} height={{graphDetails.graphHeight}} style={{chartStyle}}>
 
 	  <line x1={{graphDetails.axisGap}} y1={{addAttr graphDetails.graphHeight graphDetails.axisNegGap}} x2={{graphDetails.graphWidth}} y2={{addAttr graphDetails.graphHeight graphDetails.axisNegGap}} stroke="grey" opacity="0.6" />	 
 
@@ -160,7 +160,7 @@
   <g>
     <title><strong>{{time}}</strong><br>High: {{high}}<br>Low: {{low}}<br>Open: {{open}}<br>Close: {{close}}</title>
     {{#if liveCandleDep}}<line x1={{x}} x2={{x}} y1={{addAttr graphDetails.graphHeight graphDetails.axisNegGap}} y2={{graphDetails.axisGap}} class="vertical guide" />{{/if}}
-    <rect x={{bx}} y={{bh}} width={{w}} height={{bl}} class="{{liveCandleDep}} {{#if colour}}up{{else}}down{{/if}} candle" />
-    <line x1={{x}} y1={{lh}} x2={{x}} y2={{ll}} class="{{liveCandleDep}} {{#if colour}}up{{else}}down{{/if}} candle" />
+    <rect x={{bx}} y={{bh}} width={{w}} height={{bl}} class="{{liveCandleDep}} {{#if colour}}down{{else}}up{{/if}} candle" />
+    <line x1={{x}} y1={{lh}} x2={{x}} y2={{ll}} class="{{liveCandleDep}} {{#if colour}}down{{else}}up{{/if}} candle" />
   </g>
 </template>

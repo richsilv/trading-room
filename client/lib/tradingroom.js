@@ -137,15 +137,55 @@ TradingRoom.PriceDataSub = function(connectionId, streamId, interval, maxCandles
       	changed: function(id, fields) {
         	if (fields.timeStamp) {
           		_this.latency = new Date().getTime() - fields.timeStamp;
-          		// _.each(TradingRoom.priceData.values, function(val, key) { if (val.streamId === streamId) TradingRoom.priceData.values[key].latency = new Date().getTime() - fields.timeStamp;}); 
-          		TradingRoom.priceData.dep.changed();
         	}
       	}
     });
+
+	TradingRoom.priceData.dep.changed();
 
 	this.stop = function() {
 		_this.subHandle.stop();
 		TradingRoom.priceData.unset(candlesColl);
 	}
+
+}
+
+TradingRoom.priceData.selectChart = function(id) {
+
+	_.each(this.values, function(priceData) {
+		priceData.selected = (priceData.candlesId === id);
+	});
+	this.organiseCharts();
+
+}
+
+TradingRoom.priceData.organiseCharts = function() {
+
+	var shownSelected = false,
+		chartList = _.where(this.values, { liveChart: true }),
+		charts = chartList.length || 1,
+		otherSpacing = (App.fullWidth - (App.graphBuffer * 2) - App.graphWidth) / charts,
+		xPosition = (charts > 1) ? App.graphBuffer : App.graphBuffer + (otherSpacing / 2),
+		hiddenAngle = 60 - (charts * 5);
+
+	_.each(chartList, function(priceData, i) {
+		var chartStyle = {};
+		if (priceData.selected) {
+			chartStyle['margin-left'] = xPosition.toString() + "px";
+			xPosition += App.graphWidth;
+			shownSelected = true;
+			hiddenAngle = -hiddenAngle;
+		}
+		else {
+			chartStyle['transform-origin'] = shownSelected ? "100% 50%" : "0% 50%";
+			chartStyle['transform'] = "perspective(500px) rotate3d(0, 1, 0, " + hiddenAngle + "deg)";
+			chartStyle['margin-left'] = xPosition.toString() + "px";
+			xPosition += otherSpacing * ( shownSelected ? Math.cos(hiddenAngle * Math.PI / 180) : 1 );
+			hiddenAngle += hiddenAngle > 0 ? 25 / charts : -25 / charts;
+		}
+		priceData.chartStyle = chartStyle;
+	});
+
+	this.dep.changed();
 
 }

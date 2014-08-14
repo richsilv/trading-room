@@ -46,9 +46,16 @@ Handlebars.registerHelper('neg', function(x) {
 
 Handlebars.registerHelper('graphDetails', function() {
 
-  var chartCanvas = UI._templateInstance().find('.chartCanvas'),
-      axisGap = App.axisPadding || 0,
-      graphWidth = chartCanvas ? $(chartCanvas).width() : 300,
+  try {
+    var chartCanvas = UI._templateInstance().find('.chartCanvas');
+  }
+  catch (e) {
+    console.log(e, UI._templateInstance(), Blaze.currentView);
+  }
+  finally {
+
+  var axisGap = App.axisPadding || 0,
+      graphWidth = App.graphWidth,
       graphHeight = App.graphHeight,
       fontFamily = App.fontFamily,
       textSize = App.textSize;
@@ -62,6 +69,8 @@ Handlebars.registerHelper('graphDetails', function() {
     halfTextSize: textSize / 2,
     axisGap: axisGap,
     axisNegGap: -axisGap
+  }
+
   }
 
 });
@@ -114,7 +123,7 @@ Template.streams.events({
 
   'click .stream': function(event) {
 
-    selections.set('stream', $(event.currentTarget).attr('value'));
+    selections.set('stream', this._id);
     $('.stream').removeClass('callout');
     $(event.target).addClass('callout');
 
@@ -153,7 +162,7 @@ Template.priceData.events({
         maxCandles = parseInt($('#priceDataMaxCandles').val(), 10);
 
     var newStream = new TradingRoom.PriceDataSub(connectionId, streamId, interval, maxCandles);
-    newStream.yAxis = _.reduce(App.timeFormats, function(x, i) {return (interval * maxCandles) / 7 > i.step ? i : x}, {step: 1000, format: "H:mm:ss"});
+    newStream.yAxis = _.reduce(App.timeFormats, function(x, i) {return (interval * maxCandles) / 7 > i.step ? i : x}, {step: 1000, format: "H:mm:ss"}); 
 
     return false;
 
@@ -162,7 +171,8 @@ Template.priceData.events({
   'click .priceSeries.panel': function(event) {
 
     TradingRoom.priceData.values[this.priceDataId].liveChart = true;
-    TradingRoom.priceData.dep.changed();
+    TradingRoom.priceData.selectChart(this.priceDataId);
+    // TradingRoom.priceData.dep.changed();
 
   },
 
@@ -207,7 +217,6 @@ Template.chart.helpers({
         ratio = (graphHeight - axisPadding * 2) / (high - low),
         checkMarks = makeCheckMarks(low, high),
         yAxis = this.yAxis,
-        liveCandleId = this.liveCandle._id,
         yAxisDetails = makeYAxis(candSet[candSet.length - 1].timeStamp.getTime(), candSet[0].timeStamp.getTime(), yAxis, axisPadding, graphWidth);
 
     return {
@@ -221,11 +230,9 @@ Template.chart.helpers({
             lh = axisPadding + (high - c.high) * ratio,
             ll = Math.max(axisPadding + (high - c.low) * ratio, lh + 1),
             bl = Math.max((bhigh - blow) * ratio, 1),
-            bh = axisPadding + (high - bhigh) * ratio,
-            liveCandle = (c._id === liveCandleId);
+            bh = axisPadding + (high - bhigh) * ratio;
 
         return {
-          liveCandle: liveCandle,
           _id: c._id,
           x: x,
           bx: bx,
@@ -256,6 +263,22 @@ Template.chart.helpers({
       yAxis: yAxisDetails
 
     }
+  },
+
+  justRendered: function() {
+
+    return UI._templateInstance().justRendered.get();
+
+  },
+
+  chartStyle: function() {
+
+    var styleObject = this.chartStyle;
+
+    return _.reduce(styleObject, function(memo, value, key) {
+      return memo + key + ":" + value + ";";
+    }, "");
+
   }
 
 });
@@ -269,17 +292,39 @@ Template.chart.events({
 
   },
 
+  'click .chartCanvas': function() {
+
+    TradingRoom.priceData.selectChart(this.candlesId);
+
+  }
+
 });
 
-var changeCount = 0;
+Template.chart.created = function() {
+
+  this.justRendered = new Blaze.ReactiveVar('tiny');
+
+}
+
+Template.chart.rendered = function() {
+
+  var justRendered = this.justRendered;
+
+  TradingRoom.priceData.dep.changed();
+
+  Meteor.setTimeout(function() {
+    justRendered.set(null);
+  }, 100);
+
+};
 
 Template.candle.helpers({
 
   liveCandleDep: function() {
 
-    UI._parentData(1).liveCandle.dep.depend();
-    console.log("live candle changed", changeCount++);
-    return this.liveCandle ? "live" : null;
+    var liveCandle = UI._parentData(1).liveCandle;
+    liveCandle.dep.depend();
+    return (UI._parentData(1).liveCandle._id === this._id) ? "live" : null;
 
   }
 

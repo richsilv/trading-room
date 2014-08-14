@@ -2,6 +2,18 @@
 /* Home: Style */
 /*****************************************************************************/
 
+.chartCanvas {
+	position: absolute;
+	top: 0px;
+	left: 0px;
+	transform-origin: 50% 50%;
+	transition: all 1s ease;
+}
+
+.tiny.chartCanvas {
+	transform: scale(0);
+}
+
 .red.panel {
 	background-color: #d64a4a;
 }
@@ -11,7 +23,7 @@
 }
 
 .notReady.panel {
-	background-color: grey;
+	background-color: darkgrey;
 }
 
 .bold {
@@ -21,13 +33,13 @@
 .up.candle {
 	stroke: #2f7ed8;
 	fill: #2f7ed8;
-	opacity: 0.8;
+	opacity: 0.7;
 }
 
 .down.candle {
-	stroke: silver;
-	fill: silver;
-	opacity: 0.8;
+	stroke: #999;
+	fill: #999;
+	opacity: 0.7;
 }
 
 .live.up.candle, .live.down.candle {
